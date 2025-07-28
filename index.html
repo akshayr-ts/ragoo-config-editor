@@ -1,0 +1,288 @@
+<!DOCTYPE html>
+<html lang="en">
+	<head>
+		<meta charset="UTF-8" />
+		<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+		<title>Ragoo Pipeline Configuration Editor</title>
+		<link
+			href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css"
+			rel="stylesheet"
+		/>
+		<link
+			href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css"
+			rel="stylesheet"
+		/>
+		<style>
+			.stage-card {
+				border: 1px solid #ddd;
+				border-radius: 8px;
+				margin: 10px 0;
+				background: white;
+			}
+			.stage-preview {
+				padding: 5px 10px;
+				border-radius: 5px;
+				color: white;
+				display: inline-block;
+				margin: 5px 0;
+			}
+			.drag-handle {
+				cursor: move;
+				color: #6c757d;
+			}
+			.color-picker-container {
+				display: flex;
+				gap: 10px;
+				flex-wrap: wrap;
+			}
+			.color-option {
+				width: 40px;
+				height: 40px;
+				border-radius: 50%;
+				cursor: pointer;
+				border: 3px solid transparent;
+				transition: border-color 0.2s;
+			}
+			.color-option.selected {
+				border-color: #000;
+			}
+			#loadingOverlay {
+				position: fixed;
+				top: 0;
+				left: 0;
+				width: 100%;
+				height: 100%;
+				background: rgba(0, 0, 0, 0.8);
+				display: none;
+				justify-content: center;
+				align-items: center;
+				z-index: 9999;
+			}
+			.spinner {
+				border: 4px solid #f3f3f3;
+				border-top: 4px solid #3498db;
+				border-radius: 50%;
+				width: 40px;
+				height: 40px;
+				animation: spin 2s linear infinite;
+			}
+			@keyframes spin {
+				0% {
+					transform: rotate(0deg);
+				}
+				100% {
+					transform: rotate(360deg);
+				}
+			}
+		</style>
+	</head>
+	<body class="bg-light">
+		<!-- Loading Overlay -->
+		<div id="loadingOverlay">
+			<div class="text-center text-white">
+				<div class="spinner mx-auto mb-3"></div>
+				<div>Loading configuration...</div>
+			</div>
+		</div>
+
+		<div class="container mt-4">
+			<div class="row">
+				<div class="col-12">
+					<div class="card shadow">
+						<div class="card-header bg-primary text-white">
+							<h1 class="mb-0">
+								<i class="fas fa-cogs"></i> Ragoo Pipeline Configuration Editor
+							</h1>
+							<small>Manage pipeline stages for Zoho Recruit integration</small>
+						</div>
+						<div class="card-body">
+							<!-- GitHub Authentication -->
+							<div id="authSection" class="mb-4">
+								<div class="alert alert-info">
+									<h5>
+										<i class="fas fa-key"></i> GitHub Authentication Required
+									</h5>
+									<p>
+										To edit the pipeline configuration, you need a GitHub
+										Personal Access Token with repository write permissions.
+									</p>
+									<div class="row">
+										<div class="col-md-6">
+											<input
+												type="text"
+												id="githubToken"
+												class="form-control"
+												placeholder="GitHub Personal Access Token"
+											/>
+										</div>
+										<div class="col-md-6">
+											<button id="loadConfig" class="btn btn-success">
+												<i class="fas fa-download"></i> Load Configuration
+											</button>
+										</div>
+									</div>
+									<small class="text-muted">
+										<a href="https://github.com/settings/tokens" target="_blank"
+											>Create a token here</a
+										>
+										with 'repo' permissions
+									</small>
+								</div>
+							</div>
+
+							<!-- Configuration Editor -->
+							<div id="editorSection" style="display: none">
+								<div class="row mb-3">
+									<div class="col-md-8">
+										<h4><i class="fas fa-list"></i> Pipeline Stages</h4>
+										<p class="text-muted">
+											Drag to reorder, click to edit, or add new stages
+										</p>
+									</div>
+									<div class="col-md-4 text-end">
+										<button id="addStage" class="btn btn-primary me-2">
+											<i class="fas fa-plus"></i> Add Stage
+										</button>
+										<button id="saveConfig" class="btn btn-success">
+											<i class="fas fa-save"></i> Save Changes
+										</button>
+									</div>
+								</div>
+
+								<!-- Stages Container -->
+								<div id="stagesContainer" class="mb-4">
+									<!-- Stages will be dynamically added here -->
+								</div>
+
+								<!-- Preview Section -->
+								<div class="card">
+									<div class="card-header">
+										<h5><i class="fas fa-eye"></i> Live Preview</h5>
+									</div>
+									<div class="card-body">
+										<div id="previewContainer">
+											<!-- Preview will be generated here -->
+										</div>
+									</div>
+								</div>
+							</div>
+						</div>
+					</div>
+				</div>
+			</div>
+		</div>
+
+		<!-- Stage Template -->
+		<template id="stageTemplate">
+			<div class="stage-card p-3">
+				<div class="row align-items-center">
+					<div class="col-1">
+						<i class="fas fa-grip-vertical drag-handle"></i>
+					</div>
+					<div class="col-md-3">
+						<label class="form-label">Stage Label</label>
+						<input
+							type="text"
+							class="form-control stage-label"
+							placeholder="e.g., Applied"
+						/>
+					</div>
+					<div class="col-md-2">
+						<label class="form-label">Value</label>
+						<input
+							type="text"
+							class="form-control stage-value"
+							placeholder="e.g., applied"
+						/>
+					</div>
+					<div class="col-md-2">
+						<label class="form-label">Badge Class</label>
+						<input
+							type="text"
+							class="form-control stage-badge"
+							placeholder="e.g., badge-primary"
+						/>
+					</div>
+					<div class="col-md-3">
+						<label class="form-label">Background Color</label>
+						<div class="color-picker-container">
+							<div
+								class="color-option"
+								data-color="#a54444"
+								style="background: #a54444"
+								title="Apple Blossom"
+							></div>
+							<div
+								class="color-option"
+								data-color="#d0a72b"
+								style="background: #d0a72b"
+								title="Sheen Gold"
+							></div>
+							<div
+								class="color-option"
+								data-color="#00868c"
+								style="background: #00868c"
+								title="Dark Green"
+							></div>
+							<div
+								class="color-option"
+								data-color="#1e3a8a"
+								style="background: #1e3a8a"
+								title="Dark Blue"
+							></div>
+							<div
+								class="color-option"
+								data-color="#CCD118"
+								style="background: #ccd118"
+								title="Birdflower Green"
+							></div>
+							<div
+								class="color-option"
+								data-color="#1a936a"
+								style="background: #1a936a"
+								title="Light Green"
+							></div>
+							<div
+								class="color-option"
+								data-color="#ed0707"
+								style="background: #ed0707"
+								title="Red"
+							></div>
+							<div
+								class="color-option"
+								data-color="#f59e0b"
+								style="background: #f59e0b"
+								title="Yellow"
+							></div>
+							<div
+								class="color-option"
+								data-color="#6b7280"
+								style="background: #6b7280"
+								title="Cadet"
+							></div>
+						</div>
+						<input
+							type="color"
+							class="form-control stage-background mt-2"
+							style="height: 40px"
+						/>
+					</div>
+					<div class="col-1">
+						<button class="btn btn-danger btn-sm delete-stage">
+							<i class="fas fa-trash"></i>
+						</button>
+					</div>
+				</div>
+				<div class="row mt-2">
+					<div class="col-12">
+						<div class="stage-preview">Preview</div>
+					</div>
+				</div>
+			</div>
+		</template>
+
+		<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js"></script>
+		<script src="https://cdnjs.cloudflare.com/ajax/libs/Sortable/1.15.0/Sortable.min.js"></script>
+		<script src="app.js"></script>
+	</body>
+</html>
