@@ -3,7 +3,7 @@
 	<head>
 		<meta charset="UTF-8" />
 		<meta name="viewport" content="width=device-width, initial-scale=1.0" />
-		<title>Ragoo Pipeline Configuration Editor</title>
+		<title>Ragoo Pipeline Configuration Editor (Secure)</title>
 		<link
 			href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css"
 			rel="stylesheet"
@@ -74,6 +74,21 @@
 					transform: rotate(360deg);
 				}
 			}
+			.security-warning {
+				background: linear-gradient(45deg, #ff6b6b, #ee5a24);
+				color: white;
+				padding: 10px;
+				border-radius: 5px;
+				margin-bottom: 20px;
+			}
+			.secure-input {
+				background: rgba(0, 255, 0, 0.1);
+				border: 2px solid #28a745;
+			}
+			.token-input {
+				font-family: monospace;
+				letter-spacing: 1px;
+			}
 		</style>
 	</head>
 	<body class="bg-light">
@@ -91,42 +106,96 @@
 					<div class="card shadow">
 						<div class="card-header bg-primary text-white">
 							<h1 class="mb-0">
-								<i class="fas fa-cogs"></i> Ragoo Pipeline Configuration Editor
+								<i class="fas fa-shield-alt"></i> Ragoo Pipeline Configuration
+								Editor (Secure)
 							</h1>
-							<small>Manage pipeline stages for Zoho Recruit integration</small>
+							<small>Secure pipeline management with enhanced protection</small>
 						</div>
 						<div class="card-body">
+							<!-- Security Notice -->
+							<div class="security-warning">
+								<h6>
+									<i class="fas fa-exclamation-triangle"></i> Security Notice
+								</h6>
+								<ul class="mb-0">
+									<li>Session expires after 30 minutes of inactivity</li>
+									<li>All data is cleared when you close the tab</li>
+									<li>Never share your GitHub token with anyone</li>
+									<li>Use tokens with minimal required permissions only</li>
+								</ul>
+							</div>
+
 							<!-- GitHub Authentication -->
 							<div id="authSection" class="mb-4">
 								<div class="alert alert-info">
 									<h5>
-										<i class="fas fa-key"></i> GitHub Authentication Required
+										<i class="fas fa-key"></i> Secure GitHub Authentication
 									</h5>
 									<p>
-										To edit the pipeline configuration, you need a GitHub
-										Personal Access Token with repository write permissions.
+										Configure your repository access with enhanced security.
 									</p>
-									<div class="row">
+
+									<div class="row mb-3">
 										<div class="col-md-6">
+											<label class="form-label"
+												>Repository Owner (Username)</label
+											>
 											<input
 												type="text"
-												id="githubToken"
+												id="repoOwner"
 												class="form-control"
-												placeholder="GitHub Personal Access Token"
+												placeholder="e.g., akshayr-ts"
+												required
 											/>
 										</div>
+										<div class="col-md-6">
+											<label class="form-label">Repository Name</label>
+											<input
+												type="text"
+												id="repoName"
+												class="form-control"
+												placeholder="e.g., PUBLIC-CONFIG-RagooExt"
+												required
+											/>
+										</div>
+									</div>
+
+									<div class="row mb-3">
+										<div class="col-12">
+											<label class="form-label"
+												>GitHub Personal Access Token</label
+											>
+											<input
+												type="password"
+												id="githubToken"
+												class="form-control token-input"
+												placeholder="ghp_..."
+												required
+											/>
+											<small class="text-muted">
+												<i class="fas fa-info-circle"></i>
+												<a
+													href="https://github.com/settings/tokens"
+													target="_blank"
+													>Create a token here</a
+												>
+												with 'Contents: Write' permissions
+											</small>
+										</div>
+									</div>
+
+									<div class="row">
 										<div class="col-md-6">
 											<button id="loadConfig" class="btn btn-success">
 												<i class="fas fa-download"></i> Load Configuration
 											</button>
 										</div>
+										<div class="col-md-6 text-end">
+											<button id="clearSession" class="btn btn-warning">
+												<i class="fas fa-trash"></i> Clear Session
+											</button>
+										</div>
 									</div>
-									<small class="text-muted">
-										<a href="https://github.com/settings/tokens" target="_blank"
-											>Create a token here</a
-										>
-										with 'repo' permissions
-									</small>
 								</div>
 							</div>
 
@@ -146,6 +215,24 @@
 										<button id="saveConfig" class="btn btn-success">
 											<i class="fas fa-save"></i> Save Changes
 										</button>
+									</div>
+								</div>
+
+								<!-- Session Info -->
+								<div class="alert alert-light">
+									<div class="row">
+										<div class="col-md-6">
+											<small
+												><strong>Repository:</strong>
+												<span id="currentRepo">Not connected</span></small
+											>
+										</div>
+										<div class="col-md-6 text-end">
+											<small
+												><strong>Session expires in:</strong>
+												<span id="sessionTimer">30:00</span></small
+											>
+										</div>
 									</div>
 								</div>
 
@@ -172,7 +259,7 @@
 			</div>
 		</div>
 
-		<!-- Stage Template -->
+		<!-- Stage Template (same as before) -->
 		<template id="stageTemplate">
 			<div class="stage-card p-3">
 				<div class="row align-items-center">
@@ -283,6 +370,6 @@
 
 		<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js"></script>
 		<script src="https://cdnjs.cloudflare.com/ajax/libs/Sortable/1.15.0/Sortable.min.js"></script>
-		<script src="app.js"></script>
+		<script src="secure-app.js"></script>
 	</body>
 </html>
